@@ -1,4 +1,5 @@
 import request from 'supertest';
+import mongoose from 'mongoose';
 import { createApp } from '../src/app.js';
 import { User } from '../src/models/User.js';
 import { hashPassword } from '../src/utils/password.js';
@@ -35,3 +36,20 @@ export async function loginAs(email, password = 'Passw0rd!') {
   const res = await api().post('/api/auth/login').send({ email, password });
   return res.body.token;
 }
+
+/** Sets up the company and returns tokens for an Admin, an HR user and an Employee. */
+export async function setupWithRoles() {
+  const { token: admin } = await setupCompany();
+  await createUser({ role: 'hr', email: 'hr@acme.test' });
+  await createUser({ role: 'employee', email: 'emp@acme.test', employee: new mongoose.Types.ObjectId() });
+  return { admin, hr: await loginAs('hr@acme.test'), employee: await loginAs('emp@acme.test') };
+}
+
+/** Authenticated request helpers: as(token).get('/api/...') */
+export const as = (token) => ({
+  get: (url) => api().get(url).set('Authorization', `Bearer ${token}`),
+  post: (url, body) => api().post(url).set('Authorization', `Bearer ${token}`).send(body ?? {}),
+  put: (url, body) => api().put(url).set('Authorization', `Bearer ${token}`).send(body ?? {}),
+  patch: (url, body) => api().patch(url).set('Authorization', `Bearer ${token}`).send(body ?? {}),
+  delete: (url) => api().delete(url).set('Authorization', `Bearer ${token}`),
+});

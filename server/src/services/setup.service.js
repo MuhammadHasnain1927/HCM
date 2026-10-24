@@ -3,6 +3,7 @@ import { User, ROLES } from '../models/User.js';
 import { hashPassword } from '../utils/password.js';
 import { conflict } from '../utils/AppError.js';
 import { recordAudit } from './audit.service.js';
+import { ensureDefaultLeaveTypes } from './org.service.js';
 
 // Setup is "done" only once the owner Admin exists. A company record without an
 // Admin (e.g. the connection dropped half-way) does not lock anyone out: setup
@@ -50,6 +51,7 @@ export async function completeSetup({ companyName, timezone, adminName, adminEma
 
   settings.setupCompletedAt = new Date();
   await settings.save();
+  await ensureDefaultLeaveTypes();
 
   await recordAudit({ actor: admin, action: 'setup.complete', entity: 'Settings', entityId: settings._id, after: settings, ip });
   await recordAudit({ actor: admin, action: 'user.create', entity: 'User', entityId: admin._id, after: admin, ip });
@@ -62,8 +64,12 @@ export async function completeSetup({ companyName, timezone, adminName, adminEma
  * Does nothing if setup is already done or the variables are not set.
  */
 export async function bootstrapFromEnv(env, logger = console) {
+  if (await ownerExists()) {
+    // Installs set up before leave types existed get the built-in ones too.
+    await ensureDefaultLeaveTypes();
+    return false;
+  }
   if (!env.ADMIN_EMAIL || !env.ADMIN_PASSWORD) return false;
-  if (await ownerExists()) return false;
 
   await completeSetup({
     companyName: env.COMPANY_NAME || 'My Company',

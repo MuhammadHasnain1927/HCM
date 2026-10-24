@@ -9,8 +9,8 @@ import { ROLE_LABELS } from '../config/navigation.js';
 const NEXT_STEPS = {
   admin: [
     { icon: MapPin, title: 'Set office hours and location', text: 'Start time, grace period, weekend and the check-in radius.', to: '/organization' },
-    { icon: Building2, title: 'Add departments and designations', text: 'Employees are registered into these.', to: '/organization' },
-    { icon: CalendarDays, title: 'Review leave types and holidays', text: 'Annual 14, sick 8, casual 10 by default.', to: '/organization' },
+    { icon: Building2, title: 'Add departments and designations', text: 'Employees are registered into these.', to: '/organization?tab=departments' },
+    { icon: CalendarDays, title: 'Review leave types and holidays', text: 'Annual 14, sick 8, casual 10 by default.', to: '/organization?tab=leave-types' },
     { icon: UserCog, title: 'Create an HR login', text: 'HR registers employees and runs daily operations.', to: '/users' },
   ],
   hr: [

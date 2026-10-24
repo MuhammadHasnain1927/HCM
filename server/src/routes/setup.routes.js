@@ -4,19 +4,11 @@ import { validate } from '../middleware/validate.js';
 import { passwordSchema } from '../utils/password.js';
 import { completeSetup, getSetupStatus } from '../services/setup.service.js';
 import { signToken } from '../utils/jwt.js';
-
-const isTimezone = (tz) => {
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-};
+import { timezoneSchema } from '../utils/validators.js';
 
 const setupBody = z.object({
   companyName: z.string().trim().min(2, 'Company name is required').max(120),
-  timezone: z.string().trim().refine(isTimezone, 'Unknown timezone').optional(),
+  timezone: timezoneSchema.optional(),
   adminName: z.string().trim().min(2, 'Admin name is required').max(120),
   adminEmail: z.email('Enter a valid email').trim().toLowerCase(),
   adminPassword: passwordSchema,

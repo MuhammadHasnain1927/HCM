@@ -9,6 +9,8 @@ import LoginPage from './pages/LoginPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import ComingSoonPage from './pages/ComingSoonPage.jsx';
+import OrganizationPage from './pages/organization/OrganizationPage.jsx';
+import UsersPage from './pages/UsersPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 
 const ALL = ['admin', 'hr', 'employee'];
@@ -59,11 +61,11 @@ export default function App() {
           <Route element={<RequireRole roles={MANAGERS} />}>
             <Route path="employees" element={<ComingSoonPage title="Employees" />} />
             <Route path="payroll" element={<ComingSoonPage title="Payroll" />} />
-            <Route path="organization" element={<ComingSoonPage title="Organization" />} />
+            <Route path="organization" element={<OrganizationPage />} />
           </Route>
 
           <Route element={<RequireRole roles={['admin']} />}>
-            <Route path="users" element={<ComingSoonPage title="User accounts" />} />
+            <Route path="users" element={<UsersPage />} />
             <Route path="audit-log" element={<ComingSoonPage title="Audit log" />} />
           </Route>
 

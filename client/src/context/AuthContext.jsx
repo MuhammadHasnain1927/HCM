@@ -93,9 +93,14 @@ export function AuthProvider({ children }) {
     setState((s) => ({ ...s, user: null }));
   }, []);
 
+  /** Updates the company shown in the header after settings change, without reloading the app. */
+  const updateCompany = useCallback((changes) => {
+    setState((s) => ({ ...s, company: { ...(s.company ?? {}), ...changes } }));
+  }, []);
+
   const value = useMemo(
-    () => ({ ...state, login, logout, completeSetup, changePassword, retry: boot }),
-    [state, login, logout, completeSetup, changePassword, boot],
+    () => ({ ...state, login, logout, completeSetup, changePassword, updateCompany, retry: boot }),
+    [state, login, logout, completeSetup, changePassword, updateCompany, boot],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
