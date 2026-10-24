@@ -23,6 +23,24 @@
   <img alt="Tests" src="https://img.shields.io/badge/tests-Vitest%20%2B%20Supertest-6e9f18">
 </p>
 
+## 🧪 How to test it (judges)
+
+As the brief asks, **there are no demo accounts and no dummy data**. The live app starts from **first-run setup**, so you create everything yourself and can check that every number matches what you entered.
+
+| Step | Who | What to do |
+| --- | --- | --- |
+| 1 | You | Open https://hcm-lite-five.vercel.app → enter a company name and **your own Admin email + password** |
+| 2 | Admin | **Organization** → office hours, *Use my current location*, add a department + designation, check leave types |
+| 3 | Admin | **User accounts → Add HR login** → copy the temporary password shown once |
+| 4 | HR | Sign in in a private window → set a new password → **Employees → Register employee** (2–3 people) → **Capture face** (or upload a photo) → copy each temporary password |
+| 5 | Employee | Sign in → new password → Dashboard → **Check in with Face ID** (look at the camera and blink) |
+| 6 | Employee | **Leave** → Smart leave: *"I need next Monday and Tuesday off for my sister's wedding"* → confirm |
+| 7 | HR | **Leave → Approvals** → approve · **Dashboard → Summarize** · **Ask AI**: *"Who is on leave tomorrow?"* · **Payroll → Run payroll** |
+| 8 | Admin | **Payroll** → open the run → **Finalize** · **Audit log** |
+| 9 | Employee | **My payslips → PDF** · **Ask AI**: *"What is <colleague>'s salary?"* (politely refused) |
+
+Tips: use a different browser or a private window for each role. Temporary passwords are shown only once, at creation. Admin can turn Face ID off in **Organization → Company settings** if a laptop has no camera. The office radius applies only after Admin sets a location.
+
 ## Highlights
 
 - 🔐 **3 roles, checked on the server for every request**: Admin, HR, Employee, each with its own menu, data scope and dashboard.
