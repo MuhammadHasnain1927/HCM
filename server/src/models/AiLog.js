@@ -6,7 +6,7 @@ const aiLogSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     role: { type: String, required: true },
-    kind: { type: String, enum: ['chat', 'summary', 'smart_leave'], required: true },
+    kind: { type: String, enum: ['chat', 'summary', 'smart_leave', 'face_verify'], required: true },
     provider: { type: String, default: null },
     model: { type: String, default: null },
     tools: { type: [String], default: [] },

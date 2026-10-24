@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { Check, Copy } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
+import { Check, CheckCircle2, Copy, ScanFace } from 'lucide-react';
 import Modal from '../../components/Modal.jsx';
 import { Alert, Button } from '../../components/ui.jsx';
+
+const FaceEnrollModal = lazy(() => import('../../components/face/FaceEnrollModal.jsx'));
 
 /** Shows the result of registering one employee: the one-time temporary password, or a linked HR login. */
 export default function CredentialsModal({ result, onClose }) {
   const [copied, setCopied] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [faceDone, setFaceDone] = useState(Boolean(result.employee.faceEnrolledAt));
   const { employee, login } = result;
 
   const copy = async () => {
@@ -49,7 +53,41 @@ export default function CredentialsModal({ result, onClose }) {
             <Alert type="info">This password is shown only once. The employee must choose a new password the first time they sign in.</Alert>
           </>
         )}
+
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-4">
+          <ScanFace className="size-6 shrink-0 text-brand-700" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-slate-900">Face ID</p>
+            <p className="text-xs text-slate-500">
+              {faceDone
+                ? 'Face enrolled. Check-ins will be matched to this face.'
+                : 'Capture the face now so only this person can check in. Otherwise they set it up at their first check-in.'}
+            </p>
+          </div>
+          {faceDone ? (
+            <span className="flex items-center gap-1 text-sm font-medium text-emerald-700">
+              <CheckCircle2 className="size-4" /> Enrolled
+            </span>
+          ) : (
+            <Button variant="secondary" onClick={() => setEnrolling(true)}>
+              Capture face
+            </Button>
+          )}
+        </div>
       </div>
+      {enrolling && (
+        <Suspense fallback={null}>
+          <FaceEnrollModal
+            employeeId={employee.id}
+            employeeName={employee.name}
+            onClose={() => setEnrolling(false)}
+            onEnrolled={() => {
+              setFaceDone(true);
+              setEnrolling(false);
+            }}
+          />
+        </Suspense>
+      )}
     </Modal>
   );
 }

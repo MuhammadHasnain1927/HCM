@@ -2,6 +2,7 @@ import request from 'supertest';
 import mongoose from 'mongoose';
 import { createApp } from '../src/app.js';
 import { User } from '../src/models/User.js';
+import { Settings } from '../src/models/Settings.js';
 import { hashPassword } from '../src/utils/password.js';
 
 export const app = createApp();
@@ -14,9 +15,13 @@ export const ADMIN = {
   adminPassword: 'Admin12345',
 };
 
-/** Runs first-run setup and returns the Admin session. */
-export async function setupCompany() {
+/**
+ * Runs first-run setup and returns the Admin session. Face ID is switched off
+ * so attendance tests can check in without a camera; tests/face.test.js turns it on.
+ */
+export async function setupCompany({ faceId = false } = {}) {
   const res = await api().post('/api/setup').send(ADMIN).expect(201);
+  if (!faceId) await Settings.updateOne({ key: 'company' }, { faceCheckInRequired: false });
   return res.body;
 }
 

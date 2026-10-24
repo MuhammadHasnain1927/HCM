@@ -21,6 +21,8 @@ const employeeSchema = new mongoose.Schema(
     exitDate: { type: String, match: ISO_DATE, default: null },
     exitReason: { type: String, trim: true, maxlength: 300, default: '' },
     status: { type: String, enum: EMPLOYEE_STATUS, default: 'active' },
+    // Set when a face is enrolled for check-in verification (photo lives in FaceProfile).
+    faceEnrolledAt: { type: Date, default: null },
     // Salary structure (brief, Section 3, M6): gross = 1.5 x basic (HRA 40%, medical 10%).
     salary: {
       basic: { type: Number, min: 0, default: 0 },

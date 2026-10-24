@@ -19,7 +19,7 @@ const selectCls =
 export default function EmployeesPage() {
   const { user } = useAuth();
   const toast = useToast();
-  const canManage = user.role === 'hr';
+  const canManage = user.role === 'hr' || user.role === 'admin';
 
   const [searchInput, setSearchInput] = useState('');
   const [filters, setFilters] = useState({ search: '', departmentId: '', status: 'current', sort: 'name' });
@@ -103,13 +103,18 @@ export default function EmployeesPage() {
       header: 'Status',
       render: (e) => <Badge color={EMPLOYEE_STATUS[e.status]?.color}>{EMPLOYEE_STATUS[e.status]?.label ?? e.status}</Badge>,
     },
+    {
+      key: 'face',
+      header: 'Face ID',
+      render: (e) => (e.faceEnrolledAt ? <Badge color="green">Enrolled</Badge> : <Badge color="gray">Not set</Badge>),
+    },
   ];
 
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Employees"
-        description={canManage ? 'Register employees, keep their details current and import or export the directory.' : 'Company directory. HR manages employee records.'}
+        description={canManage ? 'Register employees, keep their details current and import or export the directory.' : 'Company directory.'}
         actions={
           canManage && (
             <>

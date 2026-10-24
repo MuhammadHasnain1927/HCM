@@ -14,7 +14,7 @@ The system starts **empty**: Admin sets up the company, HR registers employees, 
 | --- | --- |
 | M1 Auth & Access | JWT login, bcrypt (12 rounds), 3 roles, role + data-scope check on **every** API call, forced change of temporary passwords, sessions revoked on password change/reset/deactivation |
 | M2 Organization | Company settings (office hours, grace, half-day threshold, weekend, timezone, office location + radius), departments, designations, leave types + quotas, public holidays, HR logins |
-| M3 Employees | Register (creates the login), directory with server-side search/filters/paging, Employee 360, salary structure, exit/reinstate, CSV import with dry run (row + field + reason), CSV export |
+| M3 Employees | Admin or HR registers (creates the login, optional Face ID photo), directory with server-side search/filters/paging, Employee 360, salary structure, exit/reinstate, CSV import with dry run (row + field + reason), CSV export |
 | M4 Attendance | Web check-in/out stamped by the server, present / late / half day / missing checkout / absent / on leave, month calendar, daily board, corrections (request → HR approves) |
 | M5 Leave | Working days only (weekends + holidays skipped), quotas, balance, overlap and over-balance → 422, approval inbox with comments, cancel |
 | M6 Payroll Lite | Gross = 1.5 × basic, per-day deductions, proration for joiners/leavers, tax slabs, HR drafts → Admin finalizes → locked (423), payslip PDF |
@@ -22,7 +22,7 @@ The system starts **empty**: Admin sets up the company, HR registers employees, 
 | M8 AI Assistant | Chat with tools, dashboard summary, smart leave, policy Q&A, Gemini with automatic Groq fallback |
 | M9 Comms & Audit | Announcements, in-app notifications, insert-only audit log with before/after |
 
-**Bonus:** camera check-in with face detection + office geofence (web), late penalty rule (3 lates = 0.5 day, toggle), absence anomaly flags, attrition risk score, Roman Urdu answers, dark mode, installable PWA.
+**Bonus:** Face ID attendance (enrolled face + blink liveness + AI face match + office geofence, web), late penalty rule (3 lates = 0.5 day, toggle), absence anomaly flags, attrition risk score, Roman Urdu answers, dark mode, installable PWA.
 
 ## Stack
 
@@ -117,6 +117,13 @@ Keys live only in the server environment; the browser never calls an AI provider
 4. HR **Dashboard → Summarize**, then **Ask AI**: *"Who is on leave tomorrow?"* → **Payroll → Run payroll** → Admin opens the run → **Finalize**.
 5. Employee → **My payslips** → PDF; **Ask AI**: *"What is <colleague>'s salary?"* (refused) → Admin → **Audit log**.
 
+## Face ID attendance
+
+1. **Enroll:** after registering an employee, HR/Admin clicks **Capture face** (camera, or upload a clear photo). If skipped, the employee sets up Face ID once at their first check-in (camera + blink). After that only HR/Admin can re-enroll or reset it (Employee 360 → Face ID).
+2. **Check in / out:** the camera waits for exactly one face and a blink (face-api landmarks), takes a photo and sends it with the GPS position. The server stamps the time, checks the office radius (when Admin has set one) and asks an AI vision model (Gemini, falling back to Groq) whether the live face matches the enrolled face, allowing for age, beard, glasses and lighting, and rejecting photos of screens or printed photos.
+3. **Over time:** each verified photo is kept as a recent reference (last 3), so the profile follows slow changes in a person's face.
+4. **Refusals:** a mismatch is refused (422) and HR is notified; if the AI is unavailable the employee is told to retry or request an attendance correction. Every check is logged in `ai_logs` (`face_verify`), at most 15 per user per hour.
+
 ## Tests
 
 ```bash
@@ -154,7 +161,7 @@ Only `.env.example` files are committed; real secrets go in the hosting provider
 - Temporary passwords must be changed before anything else; password change/reset/deactivation revokes old sessions. HR cannot change their own salary or job record.
 - Insert-only audit log (create, update, approve, finalize, downloads) with before/after snapshots and no secrets.
 - Helmet headers, CORS limited to `CLIENT_URL`, Mongo query-injection filter, request validation with Zod, 1 MB body limit, AI key only on the server.
-- Camera check-in stores only the result of the check (distance, face found), never a photo.
+- Face ID stores one reference photo per employee plus the last 3 verified check-in photos (separate collection, never in lists or exports), visible only to HR, Admin and the employee; users are told this on the enrollment screen. Admin can switch Face ID off in Organization → Company settings.
 
 ## Done / not done
 
@@ -163,5 +170,5 @@ Only `.env.example` files are committed; real secrets go in the hosting provider
 | All 25 functionalities in the brief's checklist | Done |
 | Camera check-in (face detection + geofence, web) | Done (bonus) |
 | Late penalty, absence anomalies, attrition risk, Roman Urdu, dark mode, PWA | Done (bonus) |
-| Face *matching* to an enrolled face + blink liveness | Not done (extra bonus) |
+| Face *matching* to an enrolled face + blink liveness | Done (extra bonus): AI vision match, see below |
 | Native mobile app | Not done (optional; camera check-in works in the mobile browser) |

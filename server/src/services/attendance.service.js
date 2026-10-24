@@ -11,6 +11,7 @@ import { now as clockNow } from '../utils/clock.js';
 import { countDay, dayStatus, emptyCounts, employeeDays, loadDayData, rates } from './daystatus.service.js';
 import { recordAudit } from './audit.service.js';
 import { notifyHr, notifyUsers } from './notifications.service.js';
+import { verifyFace } from './face.service.js';
 
 const MAX_GPS_ACCURACY_M = 100;
 
@@ -71,11 +72,36 @@ async function requireOwnEmployee(user) {
 
 // ---------- Check in / out ----------
 
+const officeSet = (office) => office && office.lat !== null && office.lat !== undefined && office.lng !== null && office.lng !== undefined;
+
+/**
+ * Office geofence for camera check-ins: GPS accuracy of 100 m or better and a
+ * Haversine distance within the radius, decided on the server (brief, Section 5).
+ * Skipped until Admin sets the office location.
+ */
+function checkGeofence(settings, { lat, lng, accuracy }) {
+  const office = settings.office;
+  if (!officeSet(office)) {
+    return lat !== undefined && lng !== undefined ? { lat, lng, accuracy: accuracy ?? null, distanceMeters: null } : undefined;
+  }
+  if (lat === undefined || lng === undefined) throw unprocessable('Allow location access: check-in needs your location', 'LOCATION_REQUIRED');
+  if (typeof accuracy !== 'number' || accuracy > MAX_GPS_ACCURACY_M) {
+    throw unprocessable(`GPS accuracy is too low (${Math.round(accuracy ?? 0)} m). Move near a window and try again.`, 'GPS_INACCURATE');
+  }
+  const distanceMeters = getDistance({ latitude: lat, longitude: lng }, { latitude: office.lat, longitude: office.lng });
+  if (distanceMeters > office.radiusMeters) {
+    throw new AppError(422, 'OUTSIDE_OFFICE', `You are ${distanceMeters} m from the office (allowed ${office.radiusMeters} m)`, { distanceMeters, radiusMeters: office.radiusMeters });
+  }
+  return { lat, lng, accuracy, distanceMeters };
+}
+
 /**
  * Web or camera check-in. The server stamps the time; the browser only sends
- * location data for camera check-ins (brief, Section 5).
+ * data (brief, Section 5). With Face ID on (company setting), check-in needs a
+ * live photo that matches the enrolled face, so nobody can check in for a
+ * colleague; the office geofence applies whenever Admin has set a location.
  */
-export async function checkIn(user, { source = 'web', lat, lng, accuracy, faceCount, faceVerified } = {}, { ip } = {}) {
+export async function checkIn(user, { source = 'web', lat, lng, accuracy, faceCount, photo } = {}, { ip } = {}) {
   const emp = await requireOwnEmployee(user);
   const cal = await loadCalendar();
   const now = clockNow();
@@ -86,25 +112,25 @@ export async function checkIn(user, { source = 'web', lat, lng, accuracy, faceCo
   const onLeave = await LeaveRequest.exists({ employee: emp._id, status: 'approved', startDate: lte(date), endDate: gte(date) });
   if (onLeave) throw unprocessable('You are on approved leave today', 'ON_LEAVE');
 
+  if (await Attendance.exists({ employee: emp._id, date })) throw conflict('You have already checked in today', 'ALREADY_CHECKED_IN');
+
+  const faceRequired = cal.settings.faceCheckInRequired !== false;
+  if (faceRequired) {
+    if (!photo) throw unprocessable('Check in with the camera: Face ID is required by your company', 'FACE_REQUIRED');
+    source = 'camera';
+  }
+
   let location;
   if (source === 'camera') {
-    if (faceCount !== 1) {
+    if (!faceRequired && faceCount !== 1) {
       throw unprocessable(faceCount ? 'More than one face was detected' : 'No face was detected', 'FACE_CHECK_FAILED');
     }
-    const office = cal.settings.office ?? {};
-    if (office.lat === null || office.lat === undefined || office.lng === null || office.lng === undefined) {
-      throw unprocessable('The office location has not been set by Admin yet', 'OFFICE_LOCATION_NOT_SET');
-    }
-    if (typeof accuracy !== 'number' || accuracy > MAX_GPS_ACCURACY_M) {
-      throw unprocessable(`GPS accuracy is too low (${Math.round(accuracy ?? 0)} m). Move near a window and try again.`, 'GPS_INACCURATE');
-    }
-    // Haversine distance, decided on the server (brief, Section 5).
-    const distanceMeters = getDistance({ latitude: lat, longitude: lng }, { latitude: office.lat, longitude: office.lng });
-    if (distanceMeters > office.radiusMeters) {
-      throw new AppError(422, 'OUTSIDE_OFFICE', `You are ${distanceMeters} m from the office (allowed ${office.radiusMeters} m)`, { distanceMeters, radiusMeters: office.radiusMeters });
-    }
-    location = { lat, lng, accuracy, distanceMeters };
+    location = checkGeofence(cal.settings, { lat, lng, accuracy });
   }
+
+  let face = null;
+  if (faceRequired) face = await verifyFace(user, emp, photo, { purpose: 'check-in' });
+
 
   const { status, lateMinutes } = checkInStatus(localMinutes(now, cal.timezone), cal.settings);
   let record;
@@ -117,7 +143,7 @@ export async function checkIn(user, { source = 'web', lat, lng, accuracy, faceCo
       lateMinutes,
       source,
       ...(location ? { location } : {}),
-      ...(source === 'camera' ? { faceVerified: faceVerified ?? null } : {}),
+      ...(face ? { faceVerified: true, faceConfidence: face.confidence } : {}),
     });
   } catch (err) {
     if (err?.code === 11000) throw conflict('You have already checked in today', 'ALREADY_CHECKED_IN');
@@ -127,15 +153,23 @@ export async function checkIn(user, { source = 'web', lat, lng, accuracy, faceCo
   return serializeRecord(record, cal.timezone);
 }
 
-export async function checkOut(user, { ip } = {}) {
+export async function checkOut(user, { photo } = {}, { ip } = {}) {
   const emp = await requireOwnEmployee(user);
   const cal = await loadCalendar();
-  const now = clockNow();
-  const date = localDate(now, cal.timezone);
+  const date = localDate(clockNow(), cal.timezone);
 
-  const record = await Attendance.findOne({ employee: emp._id, date });
-  if (!record) throw unprocessable('You have not checked in today', 'NOT_CHECKED_IN');
-  if (record.checkOut) throw conflict('You have already checked out today', 'ALREADY_CHECKED_OUT');
+  const found = await Attendance.findOne({ employee: emp._id, date }).select('checkOut').lean();
+  if (!found) throw unprocessable('You have not checked in today', 'NOT_CHECKED_IN');
+  if (found.checkOut) throw conflict('You have already checked out today', 'ALREADY_CHECKED_OUT');
+  if (cal.settings.faceCheckInRequired !== false) {
+    if (!photo) throw unprocessable('Check out with the camera: Face ID is required by your company', 'FACE_REQUIRED');
+    await verifyFace(user, emp, photo, { purpose: 'check-out' });
+  }
+
+  // The time is stamped after the face check, and the save is conditional so two tabs cannot both check out.
+  const now = clockNow();
+  const record = await Attendance.findOne({ employee: emp._id, date, checkOut: null });
+  if (!record) throw conflict('You have already checked out today', 'ALREADY_CHECKED_OUT');
 
   const before = record.toObject();
   record.checkOut = now;
@@ -165,7 +199,10 @@ export async function getToday(user) {
     officeEnd: cal.settings.officeEnd,
     graceMinutes: cal.settings.graceMinutes,
     halfDayHours: cal.settings.halfDayHours,
-    officeLocationSet: cal.settings.office?.lat !== null && cal.settings.office?.lat !== undefined,
+    officeLocationSet: officeSet(cal.settings.office),
+    officeRadiusMeters: cal.settings.office?.radiusMeters ?? null,
+    faceRequired: cal.settings.faceCheckInRequired !== false,
+    faceEnrolled: Boolean(emp.faceEnrolledAt),
   };
 }
 

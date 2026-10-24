@@ -39,6 +39,7 @@ import { Badge } from '../../components/data.jsx';
 import { Alert, Button, Card, EmptyState, Input, Spinner, Textarea } from '../../components/ui.jsx';
 import EmployeeFormModal, { salaryPreview } from './EmployeeFormModal.jsx';
 import MonthGrid from './MonthGrid.jsx';
+import FaceIdCard from './FaceIdCard.jsx';
 
 function shiftMonth(month, delta) {
   const [y, m] = month.split('-').map(Number);
@@ -241,7 +242,7 @@ export default function Employee360Page() {
   const { id } = useParams();
   const { user } = useAuth();
   const toast = useToast();
-  const canManage = user.role === 'hr';
+  const canManage = user.role === 'hr' || user.role === 'admin';
 
   const employee = useApi(`/employees/${id}`);
   const [month, setMonth] = useState(currentMonth());
@@ -479,6 +480,8 @@ export default function Employee360Page() {
             <p className="text-sm text-slate-500">No salary set. Payroll skips employees without a salary structure.</p>
           )}
         </Section>
+
+        <FaceIdCard employee={e} canManage={canManage} />
 
         {/* Leave */}
         <Section icon={CalendarDays} title={`Leave ${balance.data?.year ?? ''}`.trim()} className="lg:col-span-2">

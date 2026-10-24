@@ -31,6 +31,7 @@ export function serializeEmployee(e, { includeSalary = true } = {}) {
     exitDate: e.exitDate,
     exitReason: e.exitReason,
     status: e.status,
+    faceEnrolledAt: e.faceEnrolledAt ?? null,
     ...(includeSalary ? { salary: { ...salaryBreakdown(e.salary?.basic), updatedAt: e.salary?.updatedAt ?? null } } : {}),
     userId: e.user ? String(e.user._id ?? e.user) : null,
     createdAt: e.createdAt,

@@ -40,14 +40,14 @@ describe('register employees', () => {
     expect(await AuditLog.countDocuments({ action: 'employee.create' })).toBe(2);
   });
 
-  it('only HR registers; Admin views; Employee cannot list', async () => {
+  it('Admin and HR register; Employee cannot list', async () => {
     const t = await setupWithRoles();
     const org = await createOrg(t.admin);
     const body = { name: 'X Y', email: 'xy@acme.test', departmentId: org.departmentId, joinDate: '2026-01-01', basicSalary: 1000 };
-    await as(t.admin).post('/api/employees', body).expect(403);
+    await as(t.admin).post('/api/employees', { ...body, email: 'ad@acme.test' }).expect(201);
     await as(t.employee).post('/api/employees', body).expect(403);
     await as(t.hr).post('/api/employees', body).expect(201);
-    expect((await as(t.admin).get('/api/employees').expect(200)).body.total).toBe(1);
+    expect((await as(t.admin).get('/api/employees').expect(200)).body.total).toBe(2);
     await as(t.employee).get('/api/employees').expect(403);
   });
 
@@ -190,7 +190,8 @@ describe('CSV import and export', () => {
     expect(exported.headers['content-type']).toContain('text/csv');
     expect(exported.text).toContain('"Khan, Imran"');
     expect(exported.text.split('\r\n')[0]).toContain('basicSalary');
-    await as(t.admin).get('/api/employees/export').expect(403);
+    await as(t.admin).get('/api/employees/export').expect(200);
+    await as(t.employee).get('/api/employees/export').expect(403);
   });
 
   it('rejects files without required columns', async () => {

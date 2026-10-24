@@ -12,6 +12,8 @@ router.use(requireAuth);
 // Brief #09: HR and Employee check in for themselves (Admin has no attendance).
 const selfService = requireRole(ROLES.HR, ROLES.EMPLOYEE);
 const managers = requireRole(ROLES.ADMIN, ROLES.HR);
+// A camera frame as a data URL (~30-80 KB); face.service checks type and size.
+const photoSchema = z.string().max(500000, 'The photo is too large');
 const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Use YYYY-MM');
 
 router.get('/today', async (req, res) => {
@@ -22,27 +24,22 @@ router.post(
   '/check-in',
   selfService,
   validate({
-    body: z
-      .object({
-        source: z.enum(['web', 'camera']).default('web'),
-        lat: z.number().min(-90).max(90).optional(),
-        lng: z.number().min(-180).max(180).optional(),
-        accuracy: z.number().min(0).max(100000).optional(),
-        faceCount: z.number().int().min(0).max(20).optional(),
-        faceVerified: z.boolean().optional(),
-      })
-      .refine((b) => b.source !== 'camera' || (b.lat !== undefined && b.lng !== undefined), {
-        message: 'Location is required for camera check-in',
-        path: ['lat'],
-      }),
+    body: z.object({
+      source: z.enum(['web', 'camera']).default('web'),
+      lat: z.number().min(-90).max(90).optional(),
+      lng: z.number().min(-180).max(180).optional(),
+      accuracy: z.number().min(0).max(100000).optional(),
+      faceCount: z.number().int().min(0).max(20).optional(),
+      photo: photoSchema.optional(),
+    }),
   }),
   async (req, res) => {
     res.status(201).json(await svc.checkIn(req.user, req.body, { ip: req.ip }));
   },
 );
 
-router.post('/check-out', selfService, async (req, res) => {
-  res.json(await svc.checkOut(req.user, { ip: req.ip }));
+router.post('/check-out', selfService, validate({ body: z.object({ photo: photoSchema.optional() }).default({}) }), async (req, res) => {
+  res.json(await svc.checkOut(req.user, req.body ?? {}, { ip: req.ip }));
 });
 
 router.get(

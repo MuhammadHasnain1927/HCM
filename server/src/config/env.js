@@ -23,6 +23,7 @@ const schema = z.object({
   GEMINI_MODEL: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
   GROQ_MODEL: z.string().optional(),
+  GROQ_VISION_MODEL: z.string().optional(),
 });
 
 // Treat empty values (e.g. "ADMIN_EMAIL=" copied from .env.example) as not set.

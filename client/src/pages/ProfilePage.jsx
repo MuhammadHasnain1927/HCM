@@ -75,7 +75,12 @@ export default function ProfilePage() {
         </div>
       </Card>
 
-      {!user.employeeId && <Alert type="info">Your login is not linked to an employee record. Ask HR to register you as an employee.</Alert>}
+      {!user.employeeId &&
+        (user.role === 'admin' ? (
+          <Alert type="info">Admin accounts run the company: they manage employees, settings and payroll, but do not check in or get payslips.</Alert>
+        ) : (
+          <Alert type="info">Your login is not linked to an employee record. Ask HR to register you as an employee.</Alert>
+        ))}
       {error && <Alert type="error">{error}</Alert>}
       {loading && !data && (
         <div className="flex items-center gap-2 py-6 text-sm text-slate-500">

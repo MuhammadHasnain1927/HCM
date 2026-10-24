@@ -16,7 +16,7 @@ const attendanceSchema = new mongoose.Schema(
     lateMinutes: { type: Number, default: 0 },
     workedMinutes: { type: Number, default: null },
     source: { type: String, enum: ['web', 'camera', 'correction'], default: 'web' },
-    // Camera check-ins keep the result of the location check, never a photo.
+    // Camera check-ins keep the result of the location and face checks, never a photo.
     location: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
@@ -24,6 +24,7 @@ const attendanceSchema = new mongoose.Schema(
       distanceMeters: { type: Number, default: null },
     },
     faceVerified: { type: Boolean, default: null },
+    faceConfidence: { type: Number, default: null },
   },
   { timestamps: true },
 );

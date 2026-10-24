@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Camera, Clock, LogIn, LogOut } from 'lucide-react';
+import { Camera, Clock, LogIn, LogOut, ScanFace } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api.js';
 import { useApi } from '../../lib/useApi.js';
 import { DAY_STATUS, formatDay, formatMinutes } from '../../lib/format.js';
@@ -9,6 +9,8 @@ import { Alert, Button, Card, Spinner } from '../ui.jsx';
 
 // The camera modal pulls in face detection, so it loads only when opened.
 const CameraCheckInModal = lazy(() => import('./CameraCheckInModal.jsx'));
+const FaceCheckModal = lazy(() => import('../face/FaceCheckModal.jsx'));
+const FaceEnrollModal = lazy(() => import('../face/FaceEnrollModal.jsx'));
 
 function addMinutes(hhmm, mins) {
   if (!/^\d{2}:\d{2}$/.test(hhmm || '')) return null;
@@ -38,6 +40,7 @@ export default function CheckInWidget({ onChange, className }) {
   const { data, loading, error, reload } = useApi('/attendance/today');
   const [busy, setBusy] = useState(null); // 'in' | 'out' | null
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [faceMode, setFaceMode] = useState(null); // 'in' | 'out' | 'enroll' | null
 
   const record = data?.record ?? null;
   const checkedIn = Boolean(record);
@@ -142,8 +145,29 @@ export default function CheckInWidget({ onChange, className }) {
 
       {record?.lateMinutes > 0 && <p className="mt-3 text-sm text-amber-700">Checked in {record.lateMinutes} minutes after office start.</p>}
 
+      {data.faceRequired && !data.faceEnrolled && !checkedOut && (
+        <Alert type="info" className="mt-4">
+          Your company uses Face ID for attendance. Set up your face once, then check in by looking at the camera.
+        </Alert>
+      )}
+
       <div className="mt-5 flex flex-wrap gap-2">
-        {!checkedIn && !onLeave && (
+        {data.faceRequired && !data.faceEnrolled && !checkedOut && (
+          <Button onClick={() => setFaceMode('enroll')} className="flex-1 sm:flex-none">
+            <ScanFace className="size-4" /> Set up Face ID
+          </Button>
+        )}
+        {data.faceRequired && data.faceEnrolled && !checkedIn && !onLeave && (
+          <Button onClick={() => setFaceMode('in')} className="flex-1 sm:flex-none">
+            <ScanFace className="size-4" /> Check in with Face ID
+          </Button>
+        )}
+        {data.faceRequired && data.faceEnrolled && checkedIn && !checkedOut && (
+          <Button onClick={() => setFaceMode('out')} className="flex-1 sm:flex-none">
+            <ScanFace className="size-4" /> Check out with Face ID
+          </Button>
+        )}
+        {!data.faceRequired && !checkedIn && !onLeave && (
           <>
             <Button onClick={() => act('in')} loading={busy === 'in'} className="flex-1 sm:flex-none">
               <LogIn className="size-4" /> Check in
@@ -153,7 +177,7 @@ export default function CheckInWidget({ onChange, className }) {
             </Button>
           </>
         )}
-        {checkedIn && !checkedOut && (
+        {!data.faceRequired && checkedIn && !checkedOut && (
           <Button onClick={() => act('out')} loading={busy === 'out'} className="flex-1 sm:flex-none">
             <LogOut className="size-4" /> Check out
           </Button>
@@ -167,6 +191,33 @@ export default function CheckInWidget({ onChange, className }) {
         </p>
       )}
 
+      {(faceMode === 'in' || faceMode === 'out') && (
+        <Suspense fallback={null}>
+          <FaceCheckModal
+            mode={faceMode}
+            officeLocationSet={data.officeLocationSet}
+            onClose={() => setFaceMode(null)}
+            onSuccess={(rec) => {
+              const mode = faceMode;
+              setFaceMode(null);
+              toast.success(mode === 'in' ? `Face verified. Checked in at ${rec.checkInTime}${rec.status === 'late' ? ' (late)' : ''}.` : `Face verified. Checked out at ${rec.checkOutTime}.`);
+              done();
+            }}
+          />
+        </Suspense>
+      )}
+      {faceMode === 'enroll' && (
+        <Suspense fallback={null}>
+          <FaceEnrollModal
+            onClose={() => setFaceMode(null)}
+            onEnrolled={() => {
+              toast.success('Face ID is set up. You can check in now.');
+              setFaceMode(null);
+              reload();
+            }}
+          />
+        </Suspense>
+      )}
       {cameraOpen && (
         <Suspense fallback={null}>
           <CameraCheckInModal

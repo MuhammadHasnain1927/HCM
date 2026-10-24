@@ -26,6 +26,8 @@ const settingsSchema = new mongoose.Schema(
     currency: { type: String, default: 'PKR' },
     // Bonus rule: every 3 late days deduct half a day in payroll. Off by default.
     latePenaltyEnabled: { type: Boolean, default: false },
+    // Check-in and check-out need a live photo that AI matches to the enrolled face.
+    faceCheckInRequired: { type: Boolean, default: true },
     // Set once the owner Admin exists. Until then setup can be re-run (e.g. after a dropped connection).
     setupCompletedAt: { type: Date, default: null },
   },

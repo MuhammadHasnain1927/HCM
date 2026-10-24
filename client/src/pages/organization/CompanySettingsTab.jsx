@@ -28,6 +28,7 @@ const toForm = (s) => ({
   lng: s.office.lng ?? '',
   radiusMeters: String(s.office.radiusMeters),
   latePenaltyEnabled: Boolean(s.latePenaltyEnabled),
+  faceCheckInRequired: s.faceCheckInRequired !== false,
 });
 
 function Section({ icon: Icon, title, description, children }) {
@@ -143,6 +144,7 @@ export default function CompanySettingsTab({ canEdit }) {
         weekendDays: form.weekendDays,
         office: { lat, lng, radiusMeters: Number(form.radiusMeters) },
         latePenaltyEnabled: form.latePenaltyEnabled,
+        faceCheckInRequired: form.faceCheckInRequired,
       });
       setForm(toForm(saved));
       toast.success('Company settings saved.');
@@ -236,6 +238,21 @@ export default function CompanySettingsTab({ canEdit }) {
           <span>
             <span className="font-medium text-slate-900">Late penalty</span>
             <span className="block text-slate-500">Every 3 late days deduct half a day of pay in payroll. Off by default.</span>
+          </span>
+        </label>
+        <label className="mt-3 flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm">
+          <input
+            type="checkbox"
+            checked={form.faceCheckInRequired}
+            onChange={(e) => setForm((f) => ({ ...f, faceCheckInRequired: e.target.checked }))}
+            disabled={disabled}
+            className="mt-0.5 size-4 rounded border-slate-300 accent-brand-700"
+          />
+          <span>
+            <span className="font-medium text-slate-900">Face ID for attendance</span>
+            <span className="block text-slate-500">
+              Check-in and check-out need a live camera photo with a blink, matched by AI to the employee's enrolled face, so nobody can mark attendance for someone else. The office radius below also applies when set. On by default.
+            </span>
           </span>
         </label>
       </Section>

@@ -23,6 +23,7 @@ const settingsBody = z
       })
       .partial(),
     latePenaltyEnabled: z.boolean(),
+    faceCheckInRequired: z.boolean(),
   })
   .partial();
 

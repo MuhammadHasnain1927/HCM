@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
-import { LogOut, Menu, X } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { navFor, ROLE_LABELS } from '../config/navigation.js';
 import { Logo } from './ui.jsx';
@@ -17,33 +17,99 @@ function initials(name = '') {
     .join('');
 }
 
-function Sidebar({ onNavigate }) {
-  const { user, company } = useAuth();
+const COLLAPSE_KEY = 'hcm.sidebarCollapsed';
+
+function readCollapsed() {
+  try {
+    return localStorage.getItem(COLLAPSE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Dark side menu with grouped links, the company name and the signed-in user.
+ * On desktop it can collapse to icons; on phones it opens as a drawer.
+ */
+function Sidebar({ onNavigate, collapsed = false, onToggleCollapse }) {
+  const { user, company, logout } = useAuth();
   return (
-    <div className="flex h-full flex-col">
-      <div className="px-5 pb-4 pt-5">
-        <Logo />
-        {company?.name && <p className="mt-3 truncate text-xs font-medium uppercase tracking-wide text-slate-500">{company.name}</p>}
+    <div className="flex h-full flex-col bg-[#0b2b29] text-teal-50">
+      <div className={`flex items-center gap-3 px-4 pb-4 pt-5 ${collapsed ? 'justify-center' : ''}`}>
+        <img src="/favicon.svg" alt="" className="size-9 shrink-0 rounded-lg bg-white/10 p-1" />
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="text-base font-semibold leading-tight tracking-tight text-white">
+              HCM <span className="text-teal-300">Lite</span>
+            </p>
+            {company?.name && <p className="truncate text-xs text-teal-100/60">{company.name}</p>}
+          </div>
+        )}
       </div>
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3" aria-label="Main">
-        {navFor(user.role).map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              [
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition',
-                isActive ? 'bg-brand-50 text-brand-800' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-              ].join(' ')
-            }
-          >
-            <Icon className="size-4.5 shrink-0" aria-hidden />
-            {label}
-          </NavLink>
+
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2" aria-label="Main">
+        {navFor(user.role).map(({ group, items }) => (
+          <div key={group}>
+            {collapsed ? (
+              <div className="mx-3 mb-2 border-t border-white/10" aria-hidden />
+            ) : (
+              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-teal-100/45">{group}</p>
+            )}
+            <div className="space-y-0.5">
+              {items.map(({ to, label, icon: Icon, end }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  onClick={onNavigate}
+                  title={collapsed ? label : undefined}
+                  className={({ isActive }) =>
+                    [
+                      'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition',
+                      collapsed ? 'justify-center' : '',
+                      isActive ? 'bg-white/12 text-white' : 'text-teal-50/70 hover:bg-white/6 hover:text-white',
+                    ].join(' ')
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive && <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-teal-300" aria-hidden />}
+                      <Icon className={`size-4.5 shrink-0 ${isActive ? 'text-teal-300' : ''}`} aria-hidden />
+                      {!collapsed && <span className="truncate">{label}</span>}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
+
+      <div className="border-t border-white/10 p-3">
+        <div className={`flex items-center gap-3 rounded-lg p-2 ${collapsed ? 'flex-col' : ''}`}>
+          <Link to="/profile" onClick={onNavigate} title="My profile" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-teal-400 text-sm font-semibold text-[#0b2b29]">
+            {initials(user.name)}
+          </Link>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-white">{user.name}</p>
+              <p className="truncate text-xs text-teal-100/60">{ROLE_LABELS[user.role]}</p>
+            </div>
+          )}
+          <button onClick={logout} className="rounded-lg p-2 text-teal-50/70 hover:bg-white/10 hover:text-white" aria-label="Sign out" title="Sign out">
+            <LogOut className="size-4.5" />
+          </button>
+        </div>
+        {onToggleCollapse && (
+          <button
+            onClick={onToggleCollapse}
+            className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs text-teal-100/60 hover:bg-white/6 hover:text-white"
+            aria-label={collapsed ? 'Expand menu' : 'Collapse menu'}
+          >
+            {collapsed ? <ChevronsRight className="size-4" /> : <><ChevronsLeft className="size-4" /> Collapse</>}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -51,6 +117,16 @@ function Sidebar({ onNavigate }) {
 export default function AppLayout() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const toggleCollapse = () =>
+    setCollapsed((c) => {
+      try {
+        localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1');
+      } catch {
+        /* private mode: keep it for this visit only */
+      }
+      return !c;
+    });
   const location = useLocation();
 
   useEffect(() => setOpen(false), [location.pathname]);
@@ -65,9 +141,9 @@ export default function AppLayout() {
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white lg:block">
+      <aside className={`hidden shrink-0 transition-[width] duration-200 lg:block ${collapsed ? 'w-20' : 'w-64'}`}>
         <div className="sticky top-0 h-screen">
-          <Sidebar />
+          <Sidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
         </div>
       </aside>
 
@@ -75,10 +151,10 @@ export default function AppLayout() {
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-xl">
+          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] shadow-xl">
             <button
               onClick={() => setOpen(false)}
-              className="absolute right-3 top-4 rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+              className="absolute right-3 top-4 z-10 rounded-lg p-2 text-teal-50/70 hover:bg-white/10"
               aria-label="Close menu"
             >
               <X className="size-5" />

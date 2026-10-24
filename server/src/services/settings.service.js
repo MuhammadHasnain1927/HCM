@@ -23,6 +23,7 @@ export function serializeSettings(s) {
     },
     currency: s.currency,
     latePenaltyEnabled: Boolean(s.latePenaltyEnabled),
+    faceCheckInRequired: s.faceCheckInRequired !== false,
     updatedAt: s.updatedAt,
   };
 }
@@ -75,6 +76,7 @@ export async function updateSettings(actor, changes, { ip } = {}) {
     weekendDays: [...new Set(next.weekendDays)],
     office: next.office,
     latePenaltyEnabled: next.latePenaltyEnabled,
+    faceCheckInRequired: next.faceCheckInRequired,
   });
   await settings.save();
 

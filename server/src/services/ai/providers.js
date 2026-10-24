@@ -198,7 +198,7 @@ export function setProviderOverride(fake) {
 }
 
 export function configuredProviders() {
-  if (override) return Object.keys(override);
+  if (override) return Object.keys(override).filter((k) => k !== 'vision');
   return ['gemini', 'groq'].filter((p) => (p === 'gemini' ? env.GEMINI_API_KEY : env.GROQ_API_KEY));
 }
 
@@ -207,4 +207,76 @@ export function callProvider(name, args) {
   const fn = override?.[name] ?? PROVIDERS[name];
   if (!fn) throw new ProviderError(`Unknown provider ${name}`, { code: 'NOT_CONFIGURED', retryable: false });
   return fn(args);
+}
+
+// ---------- Vision (face verification) ----------
+
+// Groq models that accept images; the list is checked in order.
+const GROQ_VISION_MODELS = () => unique([env.GROQ_VISION_MODEL, 'meta-llama/llama-4-scout-17b-16e-instruct', 'qwen/qwen3.8-27b']);
+const VISION_CALL_TIMEOUT_MS = 12000;
+
+async function visionGemini({ prompt, images, signal }) {
+  if (!env.GEMINI_API_KEY) throw new ProviderError('Gemini is not configured', { code: 'NOT_CONFIGURED' });
+  const parts = [{ text: prompt }];
+  images.forEach((img, i) => parts.push({ text: `Image ${i + 1} (${img.label}):` }, { inlineData: { mimeType: img.mimeType, data: img.base64 } }));
+  let lastError;
+  for (const model of GEMINI_MODELS()) {
+    if (signal?.aborted) break;
+    const thinking = /^gemini-(3|flash|pro)/.test(model) ? { thinkingConfig: { thinkingLevel: 'low' } } : {};
+    try {
+      const data = await postJson(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        { contents: [{ role: 'user', parts }], generationConfig: { temperature: 0, responseMimeType: 'application/json', ...thinking } },
+        { 'x-goog-api-key': env.GEMINI_API_KEY },
+        AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(VISION_CALL_TIMEOUT_MS)]),
+      );
+      const text = (data?.candidates?.[0]?.content?.parts ?? []).filter((p) => p.text && !p.thought).map((p) => p.text).join('').trim();
+      if (!text) throw new ProviderError('Gemini returned no content', { code: 'EMPTY' });
+      return { provider: 'gemini', model, text };
+    } catch (err) {
+      lastError = err;
+      if (!['MODEL_NOT_FOUND', 'RATE_LIMITED', 'OVERLOADED', 'TIMEOUT', 'EMPTY'].includes(err.code) || signal?.aborted) throw err;
+    }
+  }
+  throw lastError;
+}
+
+async function visionGroq({ prompt, images, signal }) {
+  if (!env.GROQ_API_KEY) throw new ProviderError('Groq is not configured', { code: 'NOT_CONFIGURED' });
+  const content = [{ type: 'text', text: prompt }];
+  images.forEach((img, i) => content.push({ type: 'text', text: `Image ${i + 1} (${img.label}):` }, { type: 'image_url', image_url: { url: `data:${img.mimeType};base64,${img.base64}` } }));
+  let lastError;
+  for (const model of GROQ_VISION_MODELS()) {
+    if (signal?.aborted) break;
+    try {
+      const data = await postJson(
+        'https://api.groq.com/openai/v1/chat/completions',
+        { model, temperature: 0, messages: [{ role: 'user', content }] },
+        { Authorization: `Bearer ${env.GROQ_API_KEY}` },
+        AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(VISION_CALL_TIMEOUT_MS)]),
+      );
+      const text = (data?.choices?.[0]?.message?.content ?? '').trim();
+      if (!text) throw new ProviderError('Groq returned no content', { code: 'EMPTY' });
+      return { provider: 'groq', model, text };
+    } catch (err) {
+      lastError = err;
+      // A model that is gone or does not take images: try the next one.
+      if (!['MODEL_NOT_FOUND', 'HTTP_ERROR', 'RATE_LIMITED', 'EMPTY'].includes(err.code) || signal?.aborted) throw err;
+    }
+  }
+  throw lastError;
+}
+
+const VISION = { gemini: visionGemini, groq: visionGroq };
+
+/** One image-understanding call on a specific provider ({ prompt, images: [{ label, mimeType, base64 }] }). */
+export function callVision(name, args) {
+  const fn = override?.vision?.[name] ?? VISION[name];
+  if (!fn) throw new ProviderError(`Unknown provider ${name}`, { code: 'NOT_CONFIGURED', retryable: false });
+  return fn(args);
+}
+
+export function configuredVisionProviders() {
+  if (override?.vision) return Object.keys(override.vision);
+  return configuredProviders();
 }
