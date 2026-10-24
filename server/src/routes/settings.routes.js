@@ -22,6 +22,7 @@ const settingsBody = z
         radiusMeters: z.number().int().min(10, 'At least 10 m').max(5000, 'At most 5000 m'),
       })
       .partial(),
+    latePenaltyEnabled: z.boolean(),
   })
   .partial();
 

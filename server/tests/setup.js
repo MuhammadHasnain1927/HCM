@@ -48,7 +48,11 @@ beforeAll(async () => {
   await clearDatabase();
 });
 
-afterEach(clearDatabase);
+afterEach(async () => {
+  const { setNow } = await import('../src/utils/clock.js');
+  setNow(null);
+  await clearDatabase();
+});
 
 afterAll(async () => {
   await mongoose.disconnect();

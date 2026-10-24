@@ -51,6 +51,6 @@ export function errorHandler(err, req, res, _next) {
     body = { code: 'PAYLOAD_TOO_LARGE', message: 'Request body is too large' };
   }
 
-  if (status >= 500 && !env.isTest) console.error(err);
+  if (status >= 500 && (!env.isTest || process.env.DEBUG_ERRORS)) console.error(err);
   res.status(status).json({ error: body });
 }

@@ -152,6 +152,10 @@ export default function UsersPage() {
       if (type === 'reset') {
         const { data: res } = await api.post(`/users/${user.id}/reset-password`);
         setTempResult({ ...res, title: 'Password reset' });
+      } else if (type === 'role') {
+        const role = user.role === 'hr' ? 'employee' : 'hr';
+        await api.patch(`/users/${user.id}/role`, { role });
+        toast.success(`${user.name} is now ${role === 'hr' ? 'HR' : 'an Employee'}. They need to sign in again.`);
       } else {
         await api.patch(`/users/${user.id}/status`, { isActive: !user.isActive });
         toast.success(user.isActive ? `${user.name} can no longer sign in.` : `${user.name} can sign in again.`);
@@ -206,6 +210,11 @@ export default function UsersPage() {
       render: (u) =>
         u.role === 'admin' ? null : (
           <div className="flex justify-end gap-1">
+            {u.isActive && u.employeeId && (
+              <Button variant="ghost" className="px-2.5 py-1.5" onClick={() => setConfirm({ type: 'role', user: u })} title={u.role === 'hr' ? 'Change to Employee' : 'Give HR access'}>
+                {u.role === 'hr' ? 'Make employee' : 'Make HR'}
+              </Button>
+            )}
             {u.isActive && (
               <Button variant="ghost" className="px-2.5 py-1.5" onClick={() => setConfirm({ type: 'reset', user: u })} title="Reset password">
                 <KeyRound className="size-4" />
@@ -313,15 +322,27 @@ export default function UsersPage() {
         onConfirm={runConfirmed}
         loading={busy}
         danger={confirm?.type === 'status' && confirm.user.isActive}
+        key={confirm ? `${confirm.type}-${confirm.user.id}` : 'none'}
         title={
           confirm?.type === 'reset'
             ? 'Reset password?'
-            : confirm?.user.isActive
-              ? 'Deactivate this account?'
-              : 'Activate this account?'
+            : confirm?.type === 'role'
+              ? confirm.user.role === 'hr'
+                ? 'Change to Employee?'
+                : 'Give HR access?'
+              : confirm?.user.isActive
+                ? 'Deactivate this account?'
+                : 'Activate this account?'
         }
-        confirmLabel={confirm?.type === 'reset' ? 'Reset password' : confirm?.user.isActive ? 'Deactivate' : 'Activate'}
+        confirmLabel={
+          confirm?.type === 'reset' ? 'Reset password' : confirm?.type === 'role' ? 'Change role' : confirm?.user.isActive ? 'Deactivate' : 'Activate'
+        }
       >
+        {confirm?.type === 'role' && (
+          <>
+            <strong>{confirm.user.name}</strong> will {confirm.user.role === 'hr' ? 'lose HR access and become an Employee' : 'get HR access (employees, approvals, payroll drafts)'}. They will be signed out and must sign in again.
+          </>
+        )}
         {confirm?.type === 'reset' && (
           <>
             <strong>{confirm.user.name}</strong> will be signed out and get a new temporary password to change on next sign-in.

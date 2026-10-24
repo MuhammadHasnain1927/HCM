@@ -24,6 +24,8 @@ const settingsSchema = new mongoose.Schema(
       radiusMeters: { type: Number, min: 10, max: 5000, default: 150 },
     },
     currency: { type: String, default: 'PKR' },
+    // Bonus rule: every 3 late days deduct half a day in payroll. Off by default.
+    latePenaltyEnabled: { type: Boolean, default: false },
     // Set once the owner Admin exists. Until then setup can be re-run (e.g. after a dropped connection).
     setupCompletedAt: { type: Date, default: null },
   },

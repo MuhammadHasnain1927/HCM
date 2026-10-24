@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { navFor, ROLE_LABELS } from '../config/navigation.js';
 import { Logo } from './ui.jsx';
+import NotificationsBell from './NotificationsBell.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
+import AiChatPanel from './AiChatPanel.jsx';
 
 function initials(name = '') {
   return name
@@ -97,17 +100,18 @@ export default function AppLayout() {
           <div className="lg:hidden">
             <Logo />
           </div>
-          <div className="ml-auto flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-medium text-slate-900">{user.name}</p>
-              <p className="text-xs text-slate-500">{ROLE_LABELS[user.role]}</p>
-            </div>
-            <div
-              className="flex size-9 items-center justify-center rounded-full bg-brand-700 text-sm font-semibold text-white"
-              aria-hidden
-            >
-              {initials(user.name)}
-            </div>
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
+            <NotificationsBell />
+            <Link to="/profile" className="ml-1 flex items-center gap-3 rounded-lg p-1 hover:bg-slate-100" title="My profile">
+              <div className="hidden text-right sm:block">
+                <p className="text-sm font-medium text-slate-900">{user.name}</p>
+                <p className="text-xs text-slate-500">{ROLE_LABELS[user.role]}</p>
+              </div>
+              <div className="flex size-9 items-center justify-center rounded-full bg-brand-700 text-sm font-semibold text-white" aria-hidden>
+                {initials(user.name)}
+              </div>
+            </Link>
             <button
               onClick={logout}
               className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
@@ -119,10 +123,11 @@ export default function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main className="flex-1 px-4 pb-24 pt-6 sm:px-6 lg:px-8">
           <Outlet />
         </main>
       </div>
+      <AiChatPanel />
     </div>
   );
 }

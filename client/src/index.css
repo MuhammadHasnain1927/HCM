@@ -13,6 +13,18 @@
   --color-brand-900: #134e4a;
 }
 
+/* Chart roles (validated categorical order from the data-viz palette). */
+:root {
+  --chart-single: #0d9488;
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-grid: #e2e8f0;
+  --chart-axis: #64748b;
+  --chart-surface: #ffffff;
+}
+
 html,
 body,
 #root {
@@ -21,4 +33,51 @@ body,
 
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+/*
+ * Bonus: dark mode. The UI is written with the slate scale, so dark mode swaps
+ * that scale (and white surfaces) instead of adding dark: classes everywhere.
+ * Status chips and alerts keep their light tints, which read well on dark.
+ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-slate-50: #0b1120;
+  --color-slate-100: #1e293b;
+  --color-slate-200: #263449;
+  --color-slate-300: #334155;
+  --color-slate-400: #64748b;
+  --color-slate-500: #94a3b8;
+  --color-slate-600: #cbd5e1;
+  --color-slate-700: #e2e8f0;
+  --color-slate-800: #f1f5f9;
+  --color-slate-900: #f8fafc;
+  --color-brand-50: #0d2a28;
+  --color-brand-100: #114340;
+
+  --chart-single: #2dd4bf;
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-grid: #263449;
+  --chart-axis: #94a3b8;
+  --chart-surface: #111827;
+}
+
+:root[data-theme='dark'] .bg-white {
+  background-color: #111827;
+}
+:root[data-theme='dark'] .bg-white\/90 {
+  background-color: rgb(17 24 39 / 0.9);
+}
+:root[data-theme='dark'] .text-brand-700,
+:root[data-theme='dark'] .text-brand-800 {
+  color: #5eead4;
+}
+:root[data-theme='dark'] .border-brand-200 {
+  border-color: #134e4a;
+}
+:root[data-theme='dark'] .from-brand-50 {
+  --tw-gradient-from: #0d2a28;
 }

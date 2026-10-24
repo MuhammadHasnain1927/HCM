@@ -27,7 +27,7 @@ export const NAVIGATION = [
   { to: '/organization', label: 'Organization', icon: Settings, roles: ['admin', 'hr'] },
   { to: '/users', label: 'User accounts', icon: UserCog, roles: ['admin'] },
   { to: '/audit-log', label: 'Audit log', icon: ClipboardList, roles: ['admin'] },
-  { to: '/profile', label: 'My profile', icon: UserCircle, roles: ['employee'] },
+  { to: '/profile', label: 'My profile', icon: UserCircle, roles: ['hr', 'employee'] },
 ];
 
 export const navFor = (role) => NAVIGATION.filter((item) => item.roles.includes(role));

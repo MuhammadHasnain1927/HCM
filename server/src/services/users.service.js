@@ -81,6 +81,24 @@ export async function setUserActive(actor, id, isActive, { ip } = {}) {
   return serializeUser(user);
 }
 
+/**
+ * Switches an employee-linked login between Employee and HR (e.g. an employee
+ * moves into the HR team). Admin accounts are never created this way.
+ */
+export async function setUserRole(actor, id, role, { ip } = {}) {
+  const user = await loadManagedUser(actor, id);
+  if (user.role === role) return serializeUser(user);
+  if (role === ROLES.EMPLOYEE && !user.employee) {
+    throw unprocessable('This login has no employee record, so it cannot become an Employee login', 'NO_EMPLOYEE_RECORD');
+  }
+  const before = user.toObject();
+  user.role = role;
+  user.tokenVersion += 1; // new permissions on next sign-in
+  await user.save();
+  await recordAudit({ actor, action: 'user.role_change', entity: 'User', entityId: user._id, before, after: user, ip });
+  return serializeUser(user);
+}
+
 export async function resetUserPassword(actor, id, { ip } = {}) {
   const user = await loadManagedUser(actor, id);
   const temporaryPassword = generateTempPassword();

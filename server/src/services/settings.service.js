@@ -22,6 +22,7 @@ export function serializeSettings(s) {
       radiusMeters: s.office?.radiusMeters ?? 150,
     },
     currency: s.currency,
+    latePenaltyEnabled: Boolean(s.latePenaltyEnabled),
     updatedAt: s.updatedAt,
   };
 }
@@ -73,6 +74,7 @@ export async function updateSettings(actor, changes, { ip } = {}) {
     halfDayHours: next.halfDayHours,
     weekendDays: [...new Set(next.weekendDays)],
     office: next.office,
+    latePenaltyEnabled: next.latePenaltyEnabled,
   });
   await settings.save();
 

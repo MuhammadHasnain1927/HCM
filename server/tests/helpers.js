@@ -45,6 +45,34 @@ export async function setupWithRoles() {
   return { admin, hr: await loginAs('hr@acme.test'), employee: await loginAs('emp@acme.test') };
 }
 
+/** Creates a department (+ optional designation) through the API as Admin. */
+export async function createOrg(adminToken, { department = 'Engineering', designation = 'Developer' } = {}) {
+  const dept = (await as(adminToken).post('/api/org/departments', { name: department }).expect(201)).body;
+  const des = designation
+    ? (await as(adminToken).post('/api/org/designations', { title: designation, departmentId: dept.id }).expect(201)).body
+    : null;
+  return { departmentId: dept.id, designationId: des?.id ?? null };
+}
+
+/** HR registers an employee; returns { employee, login, token } with the password already changed. */
+export async function registerEmployee(hrToken, org, overrides = {}) {
+  const body = {
+    name: 'Ali Khan',
+    email: `ali${Math.random().toString(36).slice(2, 8)}@acme.test`,
+    departmentId: org.departmentId,
+    designationId: org.designationId,
+    joinDate: '2026-01-01',
+    basicSalary: 100000,
+    ...overrides,
+  };
+  const res = await as(hrToken).post('/api/employees', body).expect(201);
+  const login = await api().post('/api/auth/login').send({ email: res.body.login.email, password: res.body.login.temporaryPassword }).expect(200);
+  const changed = await as(login.body.token)
+    .post('/api/auth/change-password', { currentPassword: res.body.login.temporaryPassword, newPassword: 'Passw0rd!' })
+    .expect(200);
+  return { ...res.body, token: changed.body.token };
+}
+
 /** Authenticated request helpers: as(token).get('/api/...') */
 export const as = (token) => ({
   get: (url) => api().get(url).set('Authorization', `Bearer ${token}`),

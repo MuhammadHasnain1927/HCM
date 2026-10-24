@@ -4,7 +4,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { ROLES } from '../models/User.js';
 import { idParams, paginationQuery } from '../utils/validators.js';
-import { createHrUser, listUsers, resetUserPassword, setUserActive } from '../services/users.service.js';
+import { createHrUser, listUsers, resetUserPassword, setUserActive, setUserRole } from '../services/users.service.js';
 
 // Brief, Section 8, #05: only Admin creates HR logins and deactivates or resets accounts.
 const router = Router();
@@ -42,6 +42,14 @@ router.patch(
   validate({ params: idParams, body: z.object({ isActive: z.boolean() }) }),
   async (req, res) => {
     res.json(await setUserActive(req.user, req.validParams.id, req.body.isActive, { ip: req.ip }));
+  },
+);
+
+router.patch(
+  '/:id/role',
+  validate({ params: idParams, body: z.object({ role: z.enum(['hr', 'employee']) }) }),
+  async (req, res) => {
+    res.json(await setUserRole(req.user, req.validParams.id, req.body.role, { ip: req.ip }));
   },
 );
 

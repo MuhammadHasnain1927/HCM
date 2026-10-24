@@ -27,6 +27,7 @@ const toForm = (s) => ({
   lat: s.office.lat ?? '',
   lng: s.office.lng ?? '',
   radiusMeters: String(s.office.radiusMeters),
+  latePenaltyEnabled: Boolean(s.latePenaltyEnabled),
 });
 
 function Section({ icon: Icon, title, description, children }) {
@@ -141,6 +142,7 @@ export default function CompanySettingsTab({ canEdit }) {
         halfDayHours: Number(form.halfDayHours),
         weekendDays: form.weekendDays,
         office: { lat, lng, radiusMeters: Number(form.radiusMeters) },
+        latePenaltyEnabled: form.latePenaltyEnabled,
       });
       setForm(toForm(saved));
       toast.success('Company settings saved.');
@@ -223,6 +225,19 @@ export default function CompanySettingsTab({ canEdit }) {
           </div>
           {errors.weekendDays && <p className="mt-1.5 text-sm text-red-600">{errors.weekendDays}</p>}
         </fieldset>
+        <label className="mt-5 flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm">
+          <input
+            type="checkbox"
+            checked={form.latePenaltyEnabled}
+            onChange={(e) => setForm((f) => ({ ...f, latePenaltyEnabled: e.target.checked }))}
+            disabled={disabled}
+            className="mt-0.5 size-4 rounded border-slate-300 accent-brand-700"
+          />
+          <span>
+            <span className="font-medium text-slate-900">Late penalty</span>
+            <span className="block text-slate-500">Every 3 late days deduct half a day of pay in payroll. Off by default.</span>
+          </span>
+        </label>
       </Section>
 
       <Section
