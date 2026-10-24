@@ -3,19 +3,20 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  --color-brand-50: #f0fdfa;
-  --color-brand-100: #ccfbf1;
-  --color-brand-200: #99f6e4;
-  --color-brand-500: #14b8a6;
-  --color-brand-600: #0d9488;
-  --color-brand-700: #0f766e;
-  --color-brand-800: #115e59;
-  --color-brand-900: #134e4a;
+  /* Brand colours from the logo: blue core, with its green and violet accents. */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-500: #2f80ff;
+  --color-brand-600: #1f6bf0;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
 }
 
 /* Chart roles (validated categorical order from the data-viz palette). */
 :root {
-  --chart-single: #0d9488;
+  --chart-single: #1f6bf0;
   --chart-1: #2a78d6;
   --chart-2: #eb6834;
   --chart-3: #1baf7a;
@@ -52,10 +53,10 @@ body {
   --color-slate-700: #e2e8f0;
   --color-slate-800: #f1f5f9;
   --color-slate-900: #f8fafc;
-  --color-brand-50: #0d2a28;
-  --color-brand-100: #114340;
+  --color-brand-50: #0f1d3d;
+  --color-brand-100: #172a57;
 
-  --chart-single: #2dd4bf;
+  --chart-single: #60a5fa;
   --chart-1: #3987e5;
   --chart-2: #d95926;
   --chart-3: #199e70;
@@ -73,10 +74,10 @@ body {
 }
 :root[data-theme='dark'] .text-brand-700,
 :root[data-theme='dark'] .text-brand-800 {
-  color: #5eead4;
+  color: #93c5fd;
 }
 :root[data-theme='dark'] .border-brand-200 {
-  border-color: #134e4a;
+  border-color: #1e3a8a;
 }
 :root[data-theme='dark'] .from-brand-50 {
   --tw-gradient-from: #0d2a28;

@@ -1,6 +1,45 @@
-# HCM Lite
+<p align="center">
+  <img src="client/public/favicon.svg" alt="HCM Lite logo" width="110" />
+</p>
 
-AI-assisted Human Capital Management for **Admin, HR and Employees**, built for the Saylani Hackathon (24 Oct 2026).
+<h1 align="center">HCM Lite</h1>
+
+<p align="center">
+  <b>AI-assisted Human Capital Management for Admin, HR and Employees</b><br/>
+  Built for the Saylani Hackathon · 24 October 2026 · Zaitoon Ashraf IT Park
+</p>
+
+<p align="center">
+  <a href="https://hcm-lite-five.vercel.app"><img alt="Live app" src="https://img.shields.io/badge/Live%20app-hcm--lite--five.vercel.app-1d4ed8?style=for-the-badge"></a>
+  <a href="https://hcm-lite-api-one.vercel.app/api/health"><img alt="API" src="https://img.shields.io/badge/API-health-10b981?style=for-the-badge"></a>
+</p>
+
+<p align="center">
+  <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
+  <img alt="Node" src="https://img.shields.io/badge/Node.js-Express%205-339933?logo=node.js&logoColor=white">
+  <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-Atlas-47a248?logo=mongodb&logoColor=white">
+  <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss&logoColor=white">
+  <img alt="Gemini" src="https://img.shields.io/badge/AI-Gemini%20%2B%20Groq-8b5cf6">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-Vitest%20%2B%20Supertest-6e9f18">
+</p>
+
+## Highlights
+
+- 🔐 **3 roles, checked on the server for every request**: Admin, HR, Employee, each with its own menu, data scope and dashboard.
+- 🧑‍💼 **Full HR flow**: first-run setup → organization → employees (with CSV import dry run) → attendance → leave approval → payroll with tax slabs → payslip PDF.
+- 🙂 **Face ID attendance**: face enrolled at registration, blink liveness, AI face match (Gemini → Groq), office geofence. Nobody can check in for a colleague.
+- 🤖 **AI assistant with tool calling**: answers from live data with the user's own access, dashboard summaries, smart leave from one sentence, policy Q&A, Roman Urdu.
+- 📊 **Dashboards** for every role, computed on the server, filtered by date range and department.
+- 📣 **Announcements, notifications and an insert-only audit log** with before/after JSON.
+- 🌙 Dark mode, installable PWA, responsive from 375 px.
+
+## Who can do what
+
+| Role | Main screens |
+| --- | --- |
+| **Admin** | Company dashboard, employees (add/edit), user accounts, organization settings (hours, grace, weekend, office location, Face ID), payroll finalize, audit log, announcements, AI on all data |
+| **HR** | HR dashboard + AI summary, employees + CSV, attendance board, corrections, leave approvals, payroll drafts, announcements, AI on HR data |
+| **Employee** | Personal dashboard, Face ID check-in/out, attendance calendar + corrections, leave + smart leave, payslips, profile, AI on own data |
 
 The system starts **empty**: Admin sets up the company, HR registers employees, and every number on the dashboards and every AI answer comes from what people do in the app. There is no dummy or pre-loaded data.
 

@@ -34,15 +34,15 @@ function readCollapsed() {
 function Sidebar({ onNavigate, collapsed = false, onToggleCollapse }) {
   const { user, company, logout } = useAuth();
   return (
-    <div className="flex h-full flex-col bg-[#0b2b29] text-teal-50">
+    <div className="flex h-full flex-col bg-[linear-gradient(180deg,#0b1a45_0%,#14154a_60%,#1c1250_100%)] text-blue-50">
       <div className={`flex items-center gap-3 px-4 pb-4 pt-5 ${collapsed ? 'justify-center' : ''}`}>
-        <img src="/favicon.svg" alt="" className="size-9 shrink-0 rounded-lg bg-white/10 p-1" />
+        <img src="/favicon.svg" alt="" className="size-10 shrink-0 rounded-xl bg-white p-1" />
         {!collapsed && (
           <div className="min-w-0">
             <p className="text-base font-semibold leading-tight tracking-tight text-white">
-              HCM <span className="text-teal-300">Lite</span>
+              HCM <span className="bg-[linear-gradient(90deg,#34d399,#60a5fa,#c084fc)] bg-clip-text text-transparent">Lite</span>
             </p>
-            {company?.name && <p className="truncate text-xs text-teal-100/60">{company.name}</p>}
+            {company?.name && <p className="truncate text-xs text-blue-100/60">{company.name}</p>}
           </div>
         )}
       </div>
@@ -53,7 +53,7 @@ function Sidebar({ onNavigate, collapsed = false, onToggleCollapse }) {
             {collapsed ? (
               <div className="mx-3 mb-2 border-t border-white/10" aria-hidden />
             ) : (
-              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-teal-100/45">{group}</p>
+              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-blue-100/45">{group}</p>
             )}
             <div className="space-y-0.5">
               {items.map(({ to, label, icon: Icon, end }) => (
@@ -67,14 +67,14 @@ function Sidebar({ onNavigate, collapsed = false, onToggleCollapse }) {
                     [
                       'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition',
                       collapsed ? 'justify-center' : '',
-                      isActive ? 'bg-white/12 text-white' : 'text-teal-50/70 hover:bg-white/6 hover:text-white',
+                      isActive ? 'bg-white/12 text-white' : 'text-blue-50/70 hover:bg-white/6 hover:text-white',
                     ].join(' ')
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      {isActive && <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-teal-300" aria-hidden />}
-                      <Icon className={`size-4.5 shrink-0 ${isActive ? 'text-teal-300' : ''}`} aria-hidden />
+                      {isActive && <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-sky-300" aria-hidden />}
+                      <Icon className={`size-4.5 shrink-0 ${isActive ? 'text-sky-300' : ''}`} aria-hidden />
                       {!collapsed && <span className="truncate">{label}</span>}
                     </>
                   )}
@@ -87,23 +87,23 @@ function Sidebar({ onNavigate, collapsed = false, onToggleCollapse }) {
 
       <div className="border-t border-white/10 p-3">
         <div className={`flex items-center gap-3 rounded-lg p-2 ${collapsed ? 'flex-col' : ''}`}>
-          <Link to="/profile" onClick={onNavigate} title="My profile" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-teal-400 text-sm font-semibold text-[#0b2b29]">
+          <Link to="/profile" onClick={onNavigate} title="My profile" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#34d399,#2f80ff,#a855f7)] text-sm font-semibold text-white">
             {initials(user.name)}
           </Link>
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-white">{user.name}</p>
-              <p className="truncate text-xs text-teal-100/60">{ROLE_LABELS[user.role]}</p>
+              <p className="truncate text-xs text-blue-100/60">{ROLE_LABELS[user.role]}</p>
             </div>
           )}
-          <button onClick={logout} className="rounded-lg p-2 text-teal-50/70 hover:bg-white/10 hover:text-white" aria-label="Sign out" title="Sign out">
+          <button onClick={logout} className="rounded-lg p-2 text-blue-50/70 hover:bg-white/10 hover:text-white" aria-label="Sign out" title="Sign out">
             <LogOut className="size-4.5" />
           </button>
         </div>
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs text-teal-100/60 hover:bg-white/6 hover:text-white"
+            className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs text-blue-100/60 hover:bg-white/6 hover:text-white"
             aria-label={collapsed ? 'Expand menu' : 'Collapse menu'}
           >
             {collapsed ? <ChevronsRight className="size-4" /> : <><ChevronsLeft className="size-4" /> Collapse</>}
@@ -154,7 +154,7 @@ export default function AppLayout() {
           <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] shadow-xl">
             <button
               onClick={() => setOpen(false)}
-              className="absolute right-3 top-4 z-10 rounded-lg p-2 text-teal-50/70 hover:bg-white/10"
+              className="absolute right-3 top-4 z-10 rounded-lg p-2 text-blue-50/70 hover:bg-white/10"
               aria-label="Close menu"
             >
               <X className="size-5" />

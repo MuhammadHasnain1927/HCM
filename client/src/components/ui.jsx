@@ -178,9 +178,9 @@ export function EmptyState({ icon: Icon = Info, title, children, action }) {
 export function Logo({ className }) {
   return (
     <div className={cx('flex items-center gap-2.5', className)}>
-      <img src="/favicon.svg" alt="" className="size-8" />
+      <img src="/favicon.svg" alt="" className="size-9" />
       <span className="text-lg font-semibold tracking-tight text-slate-900">
-        HCM <span className="text-brand-700">Lite</span>
+        HCM <span className="bg-[linear-gradient(90deg,#10b981,#1f6bf0,#8b5cf6)] bg-clip-text text-transparent">Lite</span>
       </span>
     </div>
   );
