@@ -1,0 +1,14 @@
+{
+  "name": "hcm-lite",
+  "private": true,
+  "description": "HCM Lite - AI-assisted Human Capital Management (Saylani Hackathon)",
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently -n server,client -c blue,green \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "test": "npm --prefix server test",
+    "build": "npm --prefix client run build"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
