@@ -23,6 +23,16 @@
   <img alt="Tests" src="https://img.shields.io/badge/tests-Vitest%20%2B%20Supertest-6e9f18">
 </p>
 
+## 🔑 Demo login
+
+The live app already has a company set up, so you can sign in straight away:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `muhammadhasnain1927@gmail.com` | `admin@123` |
+
+From this Admin account you can create HR logins (**User accounts**) and register employees (**Employees**); each new login gets a temporary password shown once, which must be changed at first sign-in.
+
 ## 🧪 How to test it (judges)
 
 As the brief asks, **there are no demo accounts and no dummy data**. The live app starts from **first-run setup**, so you create everything yourself and can check that every number matches what you entered.
