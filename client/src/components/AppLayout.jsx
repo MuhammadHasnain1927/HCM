@@ -34,7 +34,7 @@ function readCollapsed() {
 function Sidebar({ onNavigate, collapsed = false, onToggleCollapse }) {
   const { user, company, logout } = useAuth();
   return (
-    <div className="flex h-full flex-col bg-[linear-gradient(180deg,#0b1a45_0%,#14154a_60%,#1c1250_100%)] text-blue-50">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[linear-gradient(180deg,#0b1a45_0%,#14154a_60%,#1c1250_100%)] text-blue-50">
       <div className={`flex items-center gap-3 px-4 pb-4 pt-5 ${collapsed ? 'justify-center' : ''}`}>
         <img src="/favicon.svg" alt="" className="size-10 shrink-0 rounded-xl bg-white p-1" />
         {!collapsed && (
@@ -47,7 +47,7 @@ function Sidebar({ onNavigate, collapsed = false, onToggleCollapse }) {
         )}
       </div>
 
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2" aria-label="Main">
+      <nav className="sidebar-scroll min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-1" aria-label="Main">
         {navFor(user.role).map(({ group, items }) => (
           <div key={group}>
             {collapsed ? (
@@ -65,7 +65,7 @@ function Sidebar({ onNavigate, collapsed = false, onToggleCollapse }) {
                   title={collapsed ? label : undefined}
                   className={({ isActive }) =>
                     [
-                      'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition',
+                      'group relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition',
                       collapsed ? 'justify-center' : '',
                       isActive ? 'bg-white/12 text-white' : 'text-blue-50/70 hover:bg-white/6 hover:text-white',
                     ].join(' ')
@@ -142,7 +142,7 @@ export default function AppLayout() {
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
       <aside className={`hidden shrink-0 transition-[width] duration-200 lg:block ${collapsed ? 'w-20' : 'w-64'}`}>
-        <div className="sticky top-0 h-screen">
+        <div className="sticky top-0 h-screen overflow-hidden">
           <Sidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
         </div>
       </aside>
